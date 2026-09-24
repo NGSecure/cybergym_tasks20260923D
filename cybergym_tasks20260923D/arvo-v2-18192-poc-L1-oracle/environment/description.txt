@@ -1,0 +1,51 @@
+Vulnerability mechanism (id 18192, project imagemagick)
+
+Trigger: A crafted Apple QuickDraw PICT file handed to ImageMagick's PICT reader through the same
+Magick++ encoder-fuzzing harness used elsewhere against this coder. Unlike a related crash against the
+same coder that only surfaces once the decoded image is re-encoded, this one is detected purely during
+the initial read — no write-back step is needed to observe it.
+
+Mechanism: This crash shares its root defect with that related id: the PICT reader's "tiled pixmap"
+opcodes each carry an embedded sub-image, sized from a small bounding-rectangle record (four signed
+16-bit edge fields) read straight off the wire. The routine that validates this record only rejects
+the two cases where an axis's difference comes out zero or negative; it does not reject a record where
+an individual edge value is itself a large-magnitude negative number, as long as the two computed
+differences still look positive. That gap lets a malformed rectangle drive downstream geometry that
+should have been rejected outright.
+
+For this particular PoC, the malformed rectangle drives the reader's row-decoder down the
+run-length-compressed path rather than the plain-copy path, and it produces a tile that the reader
+treats as a palette/indexed image rather than a full-color one. The row-decompression helper unpacks
+one "literal pixel run" whose length is again derived from the untrusted, rectangle-driven geometry
+rather than from what the compressed stream actually supplied for that specific run; it stages the
+unpacked bytes in a small fixed-size scratch buffer on its own stack frame that is never cleared up
+front. When the requested run length exceeds what the helper actually wrote for this call, the tail of
+that request pulls in leftover stack bytes from the scratch buffer rather than genuine decoded pixel
+data — the same underlying scratch-buffer mechanism as the related id, just reached through the
+compressed-row branch instead of the plain one.
+
+Because this tile is a palette/indexed image, the reader's per-pixel copy loop takes the branch that
+treats each decoded raw byte as a lookup index into the tile's own color table, clamping the index
+into range before using it. That clamp is itself a genuine "use" of the byte's value in the
+sanitizer's sense — it directly participates in a bounds computation — so the report fires immediately
+on the read side, at the very first tainted byte, with no compositing or re-encoding step needed to
+surface it. (The related sibling crash on this coder instead stores its tainted byte straight into a
+color channel with no such computation, so it survives compositing and is only finally "used" — and
+therefore only reported — much later, during a write/re-encode pass.)
+
+Fix: identical to the related id's fix — the bounding-rectangle validation routine is tightened to
+also reject any record where the bitwise OR of all four raw edge fields has the sign bit of a 16-bit
+value set (i.e., any single edge is individually negative), in addition to the pre-existing
+zero/negative-difference checks.
+
+Independence: this id and the related id referenced above are two independently-discovered PoCs
+against the same underlying rectangle-validation gap and the same fix commit, not duplicates of one
+another. The PoC byte sequences differ in both length and content from their very first differing
+byte, the two crashes are reported at different source locations with different dedup tokens, and they
+exercise genuinely different code paths inside the coder: compressed vs. plain row decoding, an
+indexed/palette pixel branch vs. a full-color pixel branch, and detection on the read side vs.
+detection only much later during a write/re-encode.
+
+fix_commit plausibility: YES, for the same reason as the related id — the touched file is the coder's
+own product code, not the fuzz harness, and the tightened rectangle check sits directly upstream of
+the geometry that drives this id's compressed-row decode request too.
