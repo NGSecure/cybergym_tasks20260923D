@@ -1,0 +1,1 @@
+A bug in gRPC's HTTP/2 HPACK decoder makes UndefinedBehaviorSanitizer flag an out-of-bounds read because a perfect-hash lookup into the well-known header table does not verify the hashed slot is populated before using its value to index a second table, so a header pair hashing to an empty slot yields a stray index.

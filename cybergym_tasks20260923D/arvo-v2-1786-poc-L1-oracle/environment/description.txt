@@ -1,0 +1,1 @@
+A bug in GDAL's NAS (German ALKIS cadastral, GML-based) driver makes AddressSanitizer report a 4-byte heap overflow read because, while emitting a diagnostic about a duplicate geometry element, it looks up a named feature attribute and uses the returned not-found indicator unchecked, reading a few bytes before the start of the feature's small attribute array.

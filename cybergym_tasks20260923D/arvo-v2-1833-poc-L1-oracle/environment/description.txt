@@ -1,0 +1,1 @@
+A bug in GDAL's NTF (Ordnance Survey) vector reader makes UndefinedBehaviorSanitizer flag an out-of-bounds index because a class code read from a group's leading record indexes a fixed classification table without range checking, and the scan loop overruns its end-of-records marker on an invalid code.
