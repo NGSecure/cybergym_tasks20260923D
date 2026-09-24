@@ -1,1 +1,0 @@
-A bug in FFmpeg's MLP/TrueHD audio decoder makes UndefinedBehaviorSanitizer flag an out-of-bounds read because the header parser rejects an invalid per-channel rematrixing entry without cleaning up its partially-filled table, so a later output stage uses a stale or unvalidated entry as an index into a small fixed per-channel table.

@@ -1,1 +1,0 @@
-A bug in FFmpeg's MLP/TrueHD audio decoder makes UndefinedBehaviorSanitizer flag an out-of-bounds index because a rejected oversized channel-remixing count is not reset to a safe value, so a later access unit reuses the stale count as a loop bound and writes one step past a small fixed array.
