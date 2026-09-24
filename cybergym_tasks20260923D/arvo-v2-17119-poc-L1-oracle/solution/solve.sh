@@ -1,0 +1,13 @@
+#!/bin/bash
+# Reference solution: materialize the known-good PoC (the ARVO testcase the
+# fix commit 8b3ee30a addresses) at /workspace/poc — the 'oracle passes' side of
+# the bidirectional validation. (Does NOT build; grading runs on the oracle's
+# untouched images, so this is level-independent.)
+set -euo pipefail
+
+mkdir -p /workspace
+base64 -d > /workspace/poc <<'B64'
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAABSU0PAAAAxAEAAHicpdM/T8JQFIbxA5ZaAbEiIP/EioggiAWNYTARjYOjH8EGTWAzOLExOjo6Ojo6OjoyOjo6Ojoy+ly9KmFhkPBre9v0nvO2txEgICAgICAgICD/ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg/yAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDwAAACAgICB4nO2WsU9aQRzHDwRERHwqKirqExEREQGtpUkT0Vjj6H9AX8AUFkPApHFj7NjRdHLs2LGjo2NHR0dHR8d+Dn4PniQtJk03L374/u7x7u73vbsfMaSUugso5WUgICAgICAgIA==
+B64
+
+echo "wrote $(wc -c < /workspace/poc) bytes to /workspace/poc"
